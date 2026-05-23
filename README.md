@@ -1,6 +1,20 @@
 # AlternativeTwitchPlayer
 A lightweight, fast, and independent desktop client for watching Twitch streams without heavy system resource consumption. Built using Python, HLS.js, and raw WebSockets with native 7TV emote support.
+## 🆚 Why use this over the default Twitch website?
 
+The official Twitch website has grown into a heavy, resource-intensive platform. It runs dozens of background scripts, loads intrusive advertisements, and constantly collects telemetry data. 
+
+This alternative player was built with a completely different philosophy: **give the user full control, maximize performance, and respect digital privacy.**
+
+Here is exactly how it differs from the default experience:
+
+* **Zero Bloatware & Telemetry:** The official player runs heavy tracking and analytical scripts that monitor your behavior. This client cuts out the middleman, connecting you directly to the raw HLS video stream and IRC chat server. Your viewing habits remain private, and no unnecessary data is harvested.
+* **True Resource Efficiency:** On older hardware or laptops, the default Twitch site can consume massive amounts of RAM and CPU power. By using Vanilla JavaScript and a minimal DOM structure, this player runs flawlessly even on low-end machines.
+* **Native 7TV Integration:** To see custom 7TV emotes on the official site, you have to install heavy browser extensions that inject code into every page. This player renders global and channel 7TV emotes natively out of the box, with zero performance penalty.
+* **Honest "Audio Only" Mode:** On desktop, the default Twitch player often continues to decode video in the background even when hidden. This app explicitly requests the audio-only `m3u8` playlist from the server, instantly freeing up your GPU and drastically reducing bandwidth.
+* **Smart Chat Suspension:** Chatting on heavily populated channels (like major esports events) normally causes massive memory leaks and CPU spikes due to constant HTML repainting. In this player, hiding the chat *completely pauses* message processing and memory allocation until you bring it back.
+* **Manual Latency Control:** The official player aggressively buffers video to prevent stuttering, which can easily put you 10-15 seconds behind the live chat. This app gives you a real-time latency indicator and a dedicated button to manually snap your player to the absolute live edge of the stream.
+* **Ad-Free Core:** By utilizing a backend proxy server to fetch the raw stream manifests, it natively bypasses the bloated commercial segments baked into the standard web player.
 The project is structured cleanly into separate layers:
 * `server.py` — The backend proxy server handling CORS bypass and Twitch GraphQL API interaction.
 * `index.html` — The semantic HTML5 structural layout.
