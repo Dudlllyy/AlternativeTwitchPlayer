@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alternative Twitch Player + 7TV</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+</head>
+<body>
+    <div class="layout">
+        <button id="floatingShowBtn" class="floating-show-btn" onclick="toggleChat()">▼ Show Chat</button>
+
+        <div class="video-column">
+            <div id="player-wrapper">
+                <div class="stream-info-overlay">
+                    <div class="stream-title" id="streamTitleText">Loading info...</div>
+                    <div class="stream-viewers" id="streamViewersCount">👁 0</div>
+                </div>
+
+                <video id="video" autoplay></video>
+
+                <div class="custom-controls">
+                    <button class="ctrl-btn" id="playPauseBtn" onclick="togglePlay()">⏸ Pause</button>
+                    <input type="range" id="volumeSlider" min="0" max="1" step="0.05" value="0.5" oninput="changeVolume()">
+                    <select id="qualitySelect" onchange="changeQuality()" class="quality-select" style="display: none;">
+                        <option value="-1">Auto</option>
+                    </select>
+
+                    <div style="flex-grow: 1;"></div>
+
+                    <div class="live-dot" title="Live"></div>
+                    <span style="color: white; font-weight: bold;">LIVE</span>
+                    <button class="ctrl-btn" id="syncLiveBtn" onclick="syncToLive()" title="Click to sync to live edge">Latency: -</button>
+
+                    <button class="ctrl-btn" id="theaterBtn" onclick="toggleTheater()" style="border: 1px solid white; padding: 5px 10px; border-radius: 4px;">🎬 Theater</button>
+                    <button class="ctrl-btn" id="audioToggleBtn" onclick="toggleAudio()" style="border: 1px solid white; padding: 5px 10px; border-radius: 4px;">🎧 Audio Only</button>
+                    <button class="ctrl-btn" onclick="toggleFullscreen()" style="border: 1px solid white; padding: 5px 10px; border-radius: 4px;">🔲 Fullscreen</button>
+                </div>
+            </div>
+
+            <div class="bottom-ui-wrapper">
+                <div id="ui">
+                    <input type="text" id="channelName" class="main-input" value="shroud" placeholder="Channel name">
+                    <button class="main-btn" onclick="loadStream()">▶ Play Stream</button>
+                    <button class="main-btn" style="background: #26262c;" onclick="saveFavorite()">⭐ Bookmark</button>
+                </div>
+                <div id="favorites-panel"></div>
+            </div>
+        </div>
+
+        <div class="chat-column" id="chatBox">
+            <div class="chat-header">Twitch Chat + 7TV</div>
+            <button class="chat-toggle-btn" onclick="toggleChat()">▲ Hide Chat</button>
+            <div id="chat-messages"></div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
