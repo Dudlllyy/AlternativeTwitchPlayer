@@ -42,15 +42,19 @@ class TwitchHandler(http.server.SimpleHTTPRequestHandler):
                         "login": channel,
                         "isVod": False,
                         "vodID": "",
-                        "playerType": "site"
+                        "playerType": "embed"
                     }
                 }).encode('utf-8')
+
+
+                spoofed_ip = '77.88.55.55'
 
                 headers = {
                     'Client-Id': client_id,
                     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36',
                     'Origin': 'https://www.twitch.tv',
-                    'Referer': 'https://www.twitch.tv/'
+                    'Referer': 'https://www.twitch.tv/',
+                    'X-Forwarded-For': spoofed_ip,
                 }
 
                 req = urllib.request.Request('https://gql.twitch.tv/gql', data=gql_data, headers=headers)
@@ -81,17 +85,17 @@ class TwitchHandler(http.server.SimpleHTTPRequestHandler):
             super().do_GET()
 
 
-# Функция для авто-открытия браузера
+
 def open_browser():
     webbrowser.open(f'http://localhost:{PORT}')
 
 
-# Запуск сервера
+
 with socketserver.TCPServer(("", PORT), TwitchHandler) as httpd:
     print(f"The server is running! The player will open in your browser automatically....")
     print(f"To turn off the player, simply close this black window.")
 
-    # Открываем браузер через 1 секунду после старта сервера
+
     threading.Timer(1.0, open_browser).start()
 
     httpd.serve_forever()
