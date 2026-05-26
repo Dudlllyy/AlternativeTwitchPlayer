@@ -69,7 +69,7 @@ If you want to view, modify, or run the raw source code using Python:
 
 5. Keep the terminal running while watching. Press Ctrl + C in the terminal window to shut down the server when finished.
 
-##📱 Option 3: Watch on your Phone (Local Network)
+## 📱 Option 3: Watch on your Phone (Local Network)
 
 Since the server runs locally on your PC, you can connect to it from your mobile device and enjoy the fully adapted mobile interface!
 
