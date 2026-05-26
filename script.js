@@ -325,6 +325,11 @@ function parseTwitchMessage(line) {
 
 function renderChatMessage(username, color, message, emotes) {
     const chatContainer = document.getElementById('chat-messages');
+
+
+    const isScrolledToBottom = Math.ceil(chatContainer.scrollTop + chatContainer.clientHeight) >= (chatContainer.scrollHeight - 50);
+
+
     let twitchEmotes = {};
     for (const [id, positions] of Object.entries(emotes)) {
         const [start, end] = positions[0].split('-');
@@ -345,8 +350,24 @@ function renderChatMessage(username, color, message, emotes) {
     msgElement.innerHTML = `<span class="chat-username" style="color: ${color}">${escapeHtml(username)}:</span> <span class="chat-text">${renderedMessage}</span>`;
 
     chatContainer.appendChild(msgElement);
-    if (chatContainer.childElementCount > 100) chatContainer.removeChild(chatContainer.firstChild);
-    chatContainer.scrollTop = chatContainer.scrollHeight;
+
+    if (chatContainer.childElementCount > 200) {
+        const firstChild = chatContainer.firstChild;
+
+        const firstChildHeight = firstChild.getBoundingClientRect().height + 8; 
+
+        chatContainer.removeChild(firstChild);
+
+
+        if (!isScrolledToBottom) {
+            chatContainer.scrollTop -= firstChildHeight;
+        }
+    }
+
+
+    if (isScrolledToBottom) {
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
 }
 
 
