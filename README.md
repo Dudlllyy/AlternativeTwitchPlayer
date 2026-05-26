@@ -68,3 +68,21 @@ If you want to view, modify, or run the raw source code using Python:
 4. The terminal will log that the server has started successfully and will automatically launch your default browser to http://localhost:8000.
 
 5. Keep the terminal running while watching. Press Ctrl + C in the terminal window to shut down the server when finished.
+
+📱 Option 3: Watch on your Phone (Local Network)
+
+Since the server runs locally on your PC, you can connect to it from your mobile device and enjoy the fully adapted mobile interface!
+
+1.   Make sure your local server is running on your computer (via .exe or Python).
+
+2.   Ensure your phone is connected to the same Wi-Fi network as your computer.
+
+3.   Find your computer's local IP address:
+
+        Windows: Open the Command Prompt (cmd), type ipconfig, and look for the IPv4 Address (it usually looks like 192.168.x.x).
+
+4.   Open the web browser on your phone and enter your IP address followed by the port 8000.
+
+        Example: http://192.168.1.5:8000
+
+5.   Note: If the page doesn't load on your phone, Windows Defender Firewall might be blocking the connection. You may need to allow incoming connections for port 8000 in your Firewall settings.
