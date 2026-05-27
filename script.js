@@ -329,7 +329,6 @@ function renderChatMessage(username, color, message, emotes) {
 
     const isScrolledToBottom = Math.ceil(chatContainer.scrollTop + chatContainer.clientHeight) >= (chatContainer.scrollHeight - 50);
 
-
     let twitchEmotes = {};
     for (const [id, positions] of Object.entries(emotes)) {
         const [start, end] = positions[0].split('-');
@@ -345,27 +344,18 @@ function renderChatMessage(username, color, message, emotes) {
         return escapeHtml(word);
     }).join(' ');
 
+
     const msgElement = document.createElement('div');
-    msgElement.className = 'chat-message';
+    msgElement.className = 'chat-message new-message-animation';
     msgElement.innerHTML = `<span class="chat-username" style="color: ${color}">${escapeHtml(username)}:</span> <span class="chat-text">${renderedMessage}</span>`;
+
 
     chatContainer.appendChild(msgElement);
 
-    if (chatContainer.childElementCount > 200) {
-        const firstChild = chatContainer.firstChild;
-
-        const firstChildHeight = firstChild.getBoundingClientRect().height + 8; 
-
-        chatContainer.removeChild(firstChild);
-
-
-        if (!isScrolledToBottom) {
-            chatContainer.scrollTop -= firstChildHeight;
-        }
-    }
-
-
     if (isScrolledToBottom) {
+        while (chatContainer.childElementCount > 200) {
+            chatContainer.removeChild(chatContainer.firstChild);
+        }
         chatContainer.scrollTop = chatContainer.scrollHeight;
     }
 }
