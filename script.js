@@ -336,11 +336,20 @@ function renderChatMessage(username, color, message, emotes) {
         twitchEmotes[word] = `https://static-cdn.jtvnw.net/emoticons/v2/${id}/default/dark/1.0`;
     }
 
-    const words = message.split(' ');
+const words = message.split(' ');
     const renderedMessage = words.map(word => {
         if (channel7TVEmotes[word]) return `<img class="chat-emote" src="${channel7TVEmotes[word]}" title="${word}">`;
         if (global7TVEmotes[word]) return `<img class="chat-emote" src="${global7TVEmotes[word]}" title="${word}">`;
         if (twitchEmotes[word]) return `<img class="chat-emote" src="${twitchEmotes[word]}" title="${word}">`;
+
+
+        if (word.startsWith('http://') || word.startsWith('https://')) {
+            const safeUrl = escapeHtml(word);
+
+            return `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer" class="chat-link">${safeUrl}</a>`;
+        }
+
+
         return escapeHtml(word);
     }).join(' ');
 
