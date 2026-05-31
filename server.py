@@ -17,7 +17,7 @@ if getattr(sys, 'frozen', False):
 
 class TwitchHandler(http.server.SimpleHTTPRequestHandler):
     def end_headers(self):
-        # Строго запрещаем браузеру кэшировать любые файлы с этого сервера
+
         self.send_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
         self.send_header('Pragma', 'no-cache')
         self.send_header('Expires', '0')
@@ -93,17 +93,17 @@ class TwitchHandler(http.server.SimpleHTTPRequestHandler):
             super().do_GET()
 
 
-# Функция для авто-открытия браузера
+
 def open_browser():
     webbrowser.open(f'http://localhost:{PORT}')
 
 
-# Запуск сервера
+
 with socketserver.TCPServer(("", PORT), TwitchHandler) as httpd:
     print(f"The server is running! The player will open in your browser automatically....")
     print(f"To turn off the player, simply close this black window.")
 
-    # Открываем браузер через 1 секунду после старта сервера
+
     threading.Timer(1.0, open_browser).start()
 
     httpd.serve_forever()
