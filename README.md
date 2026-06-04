@@ -69,7 +69,32 @@ If you want to view, modify, or run the raw source code using Python:
 
 5. Keep the terminal running while watching. Press Ctrl + C in the terminal window to shut down the server when finished.
 
-## 📱 Option 3: Watch on your Phone (Local Network)
+### Option 3: Running from Source Code (Java) — For Developers
+
+If you prefer the strict typing and performance of Java, or want to run the backend without a Python interpreter:
+Prerequisites
+
+### Ensure you have Java 11 or higher installed on your system. You can check this by typing java -version in your system command prompt.
+
+#### Setup Steps
+
+1. Download the project and ensure the Java server file (TwitchServer.java) is present.
+
+2. Ensure the frontend files (index.html, style.css, script.js) are placed in the correct directory configured in the Java code (e.g., src/main/java/ or the project root).
+
+3. Open your preferred terminal inside the project folder, or open the project in your favorite IDE (like IntelliJ IDEA).
+
+4. Since it uses pure Java built-in classes, you can run the server directly from the source file without compiling it manually:
+    ```Bash
+
+    java TwitchServer.java
+
+5. The terminal will log 🚀 Java Server is running on http://localhost:8000. Open your browser and navigate to that address.
+
+6. Press Ctrl + C in the terminal window (or click the Stop button in your IDE) to shut down the server when finished.
+
+
+## 📱 Option 4: Watch on your Phone (Local Network)
 
 Since the server runs locally on your PC, you can connect to it from your mobile device and enjoy the fully adapted mobile interface!
 
