@@ -21,24 +21,18 @@ import java.nio.file.Paths;
 public class TwitchServer {
 
     private static final int PORT = 8000;
-    // Тот самый Client-Id, который использует веб-версия Twitch
     private static final String TWITCH_CLIENT_ID = "kimne78kx3ncx6brgo4mv6wki5h1ko";
 
     public static void main(String[] args) throws IOException {
         HttpServer server = HttpServer.create(new InetSocketAddress(PORT), 0);
 
-        // Роут для раздачи статических файлов (index.html, style.css, script.js)
         server.createContext("/", new StaticFileHandler());
-
-        // Роут для получения m3u8 плейлиста без CORS и рекламы
         server.createContext("/api/m3u8", new TwitchApiHandler());
-
-        server.setExecutor(null); // дефолтный пул потоков
+        server.setExecutor(null);
         server.start();
         System.out.println("🚀 Java Server is running on http://localhost:" + PORT);
     }
 
-    // Обработчик статики
     static class StaticFileHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange exchange) throws IOException {
@@ -47,14 +41,12 @@ public class TwitchServer {
                 path = "/index.html";
             }
 
-            // Убиваем кэш, как мы это делали в Python
             setNoCacheHeaders(exchange);
 
             Path filePath = Paths.get("./src/main/java" + path);
             if (Files.exists(filePath) && !Files.isDirectory(filePath)) {
                 byte[] fileBytes = Files.readAllBytes(filePath);
 
-                // Проставляем правильные MIME-типы
                 if (path.endsWith(".html")) exchange.getResponseHeaders().set("Content-Type", "text/html; charset=UTF-8");
                 else if (path.endsWith(".css")) exchange.getResponseHeaders().set("Content-Type", "text/css; charset=UTF-8");
                 else if (path.endsWith(".js")) exchange.getResponseHeaders().set("Content-Type", "application/javascript; charset=UTF-8");
@@ -72,8 +64,6 @@ public class TwitchServer {
             }
         }
     }
-
-    // Обработчик GraphQL запросов к Twitch
     static class TwitchApiHandler implements HttpHandler {
         private final HttpClient httpClient = HttpClient.newHttpClient();
 
@@ -113,7 +103,7 @@ public class TwitchServer {
                 String signature = extractJsonValue(body, "signature");
 
                 if (value == null || signature == null) {
-                    System.err.println("❌ Ошибка API Twitch: " + body);
+                    System.err.println("❌ Error API Twitch: " + body);
                     throw new RuntimeException("Failed to parse token from Twitch");
                 }
 
@@ -121,9 +111,6 @@ public class TwitchServer {
                 String m3u8Url = String.format("https://usher.ttvnw.net/api/channel/hls/%s.m3u8?client_id=%s&token=%s&sig=%s&allow_source=true&allow_audio_only=true",
                         channel, TWITCH_CLIENT_ID, encodedValue, signature);
 
-                // ==========================================
-                // НОВОЕ: ПРОКСИРУЕМ ПЛЕЙЛИСТ ЧЕРЕЗ JAVA
-                // ==========================================
                 HttpRequest m3u8Request = HttpRequest.newBuilder()
                         .uri(URI.create(m3u8Url))
                         .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
@@ -132,13 +119,10 @@ public class TwitchServer {
 
                 HttpResponse<String> m3u8Response = httpClient.send(m3u8Request, HttpResponse.BodyHandlers.ofString());
 
-                // Проверяем, не оффлайн ли канал (404)
                 if (m3u8Response.statusCode() == 404) {
                     sendResponse(exchange, 404, "Channel is offline");
                     return;
                 }
-
-                // Говорим браузеру, что это видео-плейлист, и отдаем сам текст файла!
                 exchange.getResponseHeaders().set("Content-Type", "application/vnd.apple.mpegurl");
                 sendResponse(exchange, 200, m3u8Response.body());
 
@@ -158,10 +142,7 @@ public class TwitchServer {
                 os.write(bytes);
             }
         }
-
-        // --- НОВЫЙ, НЕУБИВАЕМЫЙ ПАРСЕР НА РЕГУЛЯРНЫХ ВЫРАЖЕНИЯХ ---
         private String extractJsonValue(String json, String key) {
-            // Ищет всё содержимое между кавычками, игнорируя экранированные кавычки внутри
             Pattern pattern = Pattern.compile("\"" + key + "\"\\s*:\\s*\"((?:[^\"\\\\]|\\\\.)*)\"");
             Matcher matcher = pattern.matcher(json);
             if (matcher.find()) {
