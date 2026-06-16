@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Alternative Twitch Player</title>
+    <title>Alternative Twitch Player + 7TV</title>
     <link rel="stylesheet" href="style.css?v=2">
 
 </head>
@@ -50,12 +50,21 @@
         </div>
 
         <div class="chat-column" id="chatBox">
-            <div class="chat-header">Twitch Chat</div>
+            <div class="chat-header">Twitch Chat + 7TV</div>
             <button class="chat-toggle-btn" onclick="toggleChat()">▲ Hide Chat</button>
             <div id="chat-messages"></div>
+
+            <button id="scrollToBottomBtn" class="scroll-bottom-btn hidden" onclick="scrollToBottom()">⬇ Новые сообщения</button>
         </div>
     </div>
-
+    <div id="userHistoryModal" class="user-modal hidden">
+        <div class="modal-header" id="modalHeader">
+            <span id="modalTitle" style="font-weight: bold;">User History</span>
+            <span class="modal-close" onclick="closeUserHistory()" title="Close">✖</span>
+        </div>
+        <div class="modal-body" id="modalBody">
+            </div>
+    </div>
     <script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
 
     <script src="script.js?v=3"></script>
