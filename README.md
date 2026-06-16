@@ -34,9 +34,9 @@ The project is structured cleanly into separate layers:
 ---
 
 
-## 🪶 The "Lite" Version (Spartan Edition)
+## 🪶 The "Lite" Version
 
-For users with extremely old hardware or those who want the absolute minimum memory footprint, we provide a frozen **Lite Version** (`index-lite.html`, `script-lite.js`, `style-lite.css`). 
+For users with extremely old hardware or those who want the absolute minimum memory footprint, we provide a frozen **Lite Version** (`index.html`, `script.js`, `style.css`). 
 
 **What is removed in the Lite Version to maximize performance?**
 * **No 7TV Emotes:** Only raw text and native Twitch badges (Moderator, VIP, Sub) are rendered in chat, saving massive amounts of RAM and network bandwidth.
