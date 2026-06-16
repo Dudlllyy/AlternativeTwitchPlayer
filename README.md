@@ -33,6 +33,22 @@ The project is structured cleanly into separate layers:
 
 ---
 
+
+## 🪶 The "Lite" Version (Spartan Edition)
+
+For users with extremely old hardware or those who want the absolute minimum memory footprint, we provide a frozen **Lite Version** (`index-lite.html`, `script-lite.js`, `style-lite.css`). 
+
+**What is removed in the Lite Version to maximize performance?**
+* **No 7TV Emotes:** Only raw text and native Twitch badges (Moderator, VIP, Sub) are rendered in chat, saving massive amounts of RAM and network bandwidth.
+* **No CSS Animations:** Chat messages appear instantly without sliding animations to save CPU/GPU rendering cycles.
+* **No Bookmarks/UI Clutter:** Stripped down to just the video player, audio toggle, and chat.
+* **Aggressive DOM Clearing:** The chat history is strictly limited to just 50 messages to prevent memory leaks over long viewing sessions.
+* **No Background API Calls:** Removes the viewer count and stream title polling.
+
+*Note: The Lite version is conceptually complete and "frozen" as a stable, ultra-minimalist client. All new feature updates and UI improvements are pushed exclusively to the Main version.*
+
+---
+
 ## 📥 How to Run the Project
 
 ### Option 1: Running the Executable (.exe) — For Regular Users
@@ -94,20 +110,3 @@ Prerequisites
 6. Press Ctrl + C in the terminal window (or click the Stop button in your IDE) to shut down the server when finished.
 
 
-## 📱 Option 4: Watch on your Phone (Local Network)
-
-Since the server runs locally on your PC, you can connect to it from your mobile device and enjoy the fully adapted mobile interface!
-
-1.   Make sure your local server is running on your computer (via .exe or Python).
-
-2.   Ensure your phone is connected to the same Wi-Fi network as your computer.
-
-3.   Find your computer's local IP address:
-
-        Windows: Open the Command Prompt (cmd), type ipconfig, and look for the IPv4 Address (it usually looks like 192.168.x.x).
-
-4.   Open the web browser on your phone and enter your IP address followed by the port 8000.
-
-        Example: http://192.168.1.5:8000
-
-5.   Note: If the page doesn't load on your phone, Windows Defender Firewall might be blocking the connection. You may need to allow incoming connections for port 8000 in your Firewall settings.
