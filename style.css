@@ -183,7 +183,6 @@ body {
 .modal-body::-webkit-scrollbar { width: 6px; }
 .modal-body::-webkit-scrollbar-thumb { background: #3a3a3d; border-radius: 3px; }
 
-/* Сообщения внутри истории */
 .history-msg {
     border-bottom: 1px solid rgba(255,255,255,0.05);
     padding-bottom: 5px;
@@ -452,13 +451,13 @@ body.theater-mode .bottom-ui-wrapper { max-height: 0; opacity: 0; margin-top: 0;
     animation: slideInRight 0.3s ease-out forwards;
 }
 
-/* Стили полупрозрачной кнопки */
+
 .scroll-bottom-btn {
     position: absolute;
-    bottom: 15px; /* Сделали чуть ниже */
+    bottom: 15px; 
     left: 50%;
-    transform: translateX(-50%); /* Центрируем ровно по ширине чата */
-    background: rgba(31, 31, 35, 0.85); /* Сделали фон чуть менее прозрачным для читаемости */
+    transform: translateX(-50%); 
+    background: rgba(31, 31, 35, 0.85); 
     border: 1px solid #9146FF;
     color: white;
     padding: 8px 16px;
@@ -481,10 +480,10 @@ body.theater-mode .bottom-ui-wrapper { max-height: 0; opacity: 0; margin-top: 0;
     letter-spacing: 0.5px;
 }
 
-/* 1. Выделенное сообщение (за баллы канала) */
+
 .msg-highlighted {
-    background: rgba(145, 70, 255, 0.15); /* Полупрозрачный фиолетовый фон */
-    border: 1px solid #9146FF; /* Фиолетовая рамка */
+    background: rgba(145, 70, 255, 0.15); 
+    border: 1px solid #9146FF; 
     border-radius: 6px;
     padding: 8px 10px;
     margin: 6px 0;
@@ -493,10 +492,10 @@ body.theater-mode .bottom-ui-wrapper { max-height: 0; opacity: 0; margin-top: 0;
     color: #bf94ff;
 }
 
-/* 2. Первое сообщение в чате */
+
 .msg-first-time {
-    background: rgba(255, 255, 255, 0.03); /* Очень легкий светлый фон */
-    border-left: 4px solid #ffb347; /* Яркая оранжевая полоса слева */
+    background: rgba(255, 255, 255, 0.03); 
+    border-left: 4px solid #ffb347; 
     border-radius: 0 4px 4px 0;
     padding: 8px 10px;
     margin: 6px 0;
@@ -506,15 +505,15 @@ body.theater-mode .bottom-ui-wrapper { max-height: 0; opacity: 0; margin-top: 0;
 }
 
 .scroll-bottom-btn:hover {
-    background: rgba(145, 70, 255, 0.85); /* При наведении становится ярче */
+    background: rgba(145, 70, 255, 0.85); 
     transform: translateX(-50%) scale(1.05);
 }
 
-/* Класс для плавного скрытия */
+
 .scroll-bottom-btn.hidden {
     opacity: 0;
     pointer-events: none;
-    transform: translateX(-50%) translateY(15px); /* Слегка уезжает вниз при скрытии */
+    transform: translateX(-50%) translateY(15px); 
 }
 #chat-messages {
 
@@ -530,7 +529,7 @@ body.theater-mode .bottom-ui-wrapper { max-height: 0; opacity: 0; margin-top: 0;
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background-color: #555; /* Серый цвет по умолчанию (загрузка) */
+    background-color: #555; 
     display: inline-block;
     transition: background-color 0.3s, box-shadow 0.3s;
 }
@@ -547,7 +546,7 @@ body.theater-mode .bottom-ui-wrapper { max-height: 0; opacity: 0; margin-top: 0;
 .fav-viewers {
     font-size: 11px;
     color: #adadb8;
-    margin-left: auto; /* Отодвигаем счетчик вправо */
+    margin-left: auto; 
     padding-left: 5px;
 }
 
