@@ -101,6 +101,9 @@ function removeFavorite(channel, event) {
 }
 
 function loadFavorite(channel) {
+    // Если мы только что листали список, игнорируем клик и ничего не переключаем
+    if (hasDragged) return;
+
     document.getElementById('channelName').value = channel;
     loadStream();
 }
@@ -436,7 +439,7 @@ function renderChatMessage(username, color, message, emotes, badges, isFirstMsg,
 
     const globalBadges = {
         broadcaster: "https://static-cdn.jtvnw.net/badges/v1/5527c58c-fb7d-422d-b71b-f309dcb85cc1/1",
-        moderator: "https://static-cdn.jtvnw.net/badges/v1/3267646d-33f0-4b17-b3df-f923a41ea1d0/1",
+        moderator: "https://static-cdn.jtvnw.net/badges/v1/3267646d-33f0-4b17-b3df-f923a41db1d0/1",
         vip: "https://static-cdn.jtvnw.net/badges/v1/b817aba4-fad8-49e2-b88a-7cc744dfa6ec/1",
         premium: "https://static-cdn.jtvnw.net/badges/v1/bbbe0db0-a598-423e-86d0-f9fb98ca1933/1",
         founder: "https://static-cdn.jtvnw.net/badges/v1/511b78a9-ab37-472f-9569-457753bbe8d3/1",
@@ -496,20 +499,38 @@ const slider = document.getElementById('favorites-panel');
 let isDown = false;
 let startX;
 let scrollLeft;
+let hasDragged = false; // Флаг, который блокирует случайный клик
 
 slider.addEventListener('mousedown', (e) => {
     isDown = true;
+    hasDragged = false; // Сбрасываем флаг при новом нажатии
     slider.classList.add('active');
     startX = e.pageX - slider.offsetLeft;
     scrollLeft = slider.scrollLeft;
 });
-slider.addEventListener('mouseleave', () => { isDown = false; slider.classList.remove('active'); });
-slider.addEventListener('mouseup', () => { isDown = false; slider.classList.remove('active'); });
+
+slider.addEventListener('mouseleave', () => {
+    isDown = false;
+    slider.classList.remove('active');
+});
+
+slider.addEventListener('mouseup', () => {
+    isDown = false;
+    slider.classList.remove('active');
+    // Флаг hasDragged сбросится сам при следующем mousedown
+});
+
 slider.addEventListener('mousemove', (e) => {
     if (!isDown) return;
     e.preventDefault();
     const x = e.pageX - slider.offsetLeft;
     const walk = (x - startX) * 1.5;
+
+    // Если мы сдвинули мышку больше чем на 5 пикселей - это 100% скролл
+    if (Math.abs(walk) > 5) {
+        hasDragged = true;
+    }
+
     slider.scrollLeft = scrollLeft - walk;
 });
 
@@ -580,9 +601,7 @@ function closeUserHistory() {
     userModal.classList.add('hidden');
 }
 
-// ==========================================
-// ЛОГИКА КНОПКИ "ВЕРНУТЬСЯ В КОНЕЦ ЧАТА"
-// ==========================================
+
 const chatMessagesContainer = document.getElementById('chat-messages');
 const scrollToBottomBtn = document.getElementById('scrollToBottomBtn');
 
