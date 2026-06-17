@@ -101,7 +101,7 @@ function removeFavorite(channel, event) {
 }
 
 function loadFavorite(channel) {
-    // Если мы только что листали список, игнорируем клик и ничего не переключаем
+
     if (hasDragged) return;
 
     document.getElementById('channelName').value = channel;
@@ -117,7 +117,7 @@ function renderFavorites() {
         return;
     }
 
-    // Сначала быстро рендерим все кнопки с "серой" точкой загрузки
+
     panel.innerHTML = favs.map(channel => `
         <button class="fav-btn" id="fav-btn-${channel}" onclick="loadFavorite('${channel}')">
             <span class="fav-status-dot" id="fav-dot-${channel}"></span>
@@ -127,31 +127,30 @@ function renderFavorites() {
         </button>
     `).join('');
 
-    // Затем асинхронно запускаем проверку онлайна для каждого канала в списке
+
     favs.forEach(channel => checkFavoriteStatus(channel));
 }
 
 async function checkFavoriteStatus(channel) {
     try {
-        // Используем тот же легкий эндпоинт, что и для основного плеера
+
         const res = await fetch(`https://decapi.me/twitch/viewercount/${channel}`);
         const text = await res.text();
 
-        // Находим элементы конкретно этой кнопки
+
         const dot = document.getElementById(`fav-dot-${channel}`);
         const viewers = document.getElementById(`fav-viewers-${channel}`);
 
-        // Если пользователь успел удалить закладку до завершения запроса - прерываем
         if (!dot || !viewers) return;
 
         if (text.toLowerCase().includes('offline')) {
             dot.classList.add('offline');
             dot.classList.remove('live');
-            viewers.innerText = ''; // Скрываем зрителей, если оффлайн
+            viewers.innerText = ''; 
         } else {
             dot.classList.add('live');
             dot.classList.remove('offline');
-            viewers.innerText = `👁 ${text}`; // Показываем зрителей
+            viewers.innerText = `👁 ${text}`; 
         }
     } catch (e) {
         console.log(`Failed to check status for ${channel}`);
@@ -177,7 +176,6 @@ function startPlayer(url) {
             qSelect.value = "-1";
         });
 
-        // УМНЫЙ ПЕРЕХВАТ ОШИБОК
         hls.on(Hls.Events.ERROR, (event, data) => {
             if (data.fatal) {
                 if (data.response && data.response.code === 404) {
@@ -198,7 +196,7 @@ async function loadStream() {
     const channel = document.getElementById('channelName').value.toLowerCase().replace(/\s+/g, '');
     if (!channel) return;
 
-    // ПРИНУДИТЕЛЬНО сбрасываем аудиоплеер в обычный видео-режим при любой новой загрузке
+
     isAudioOnly = false;
     wrapper.classList.remove('audio-mode');
     audioBtn.innerText = "🎧 Audio Only";
@@ -208,7 +206,6 @@ async function loadStream() {
     document.getElementById('streamTitleText').innerText = "Loading info...";
     document.getElementById('streamViewersCount').innerText = "👁 0";
 
-    // Скармливаем HLS.js ссылку на НАШ локальный сервер
     startPlayer(`/api/m3u8?channel=${channel}`);
 
     initChat(channel);
@@ -222,13 +219,13 @@ async function toggleAudio() {
     const channel = document.getElementById('channelName').value.toLowerCase().replace(/\s+/g, '');
     if (!channel) return;
 
-    // Если мы УЖЕ в режиме аудио, просто загружаем обычный стрим (он сам сбросит все классы)
+
     if (isAudioOnly) {
         loadStream();
         return;
     }
 
-    // Иначе включаем режим аудио
+
     isAudioOnly = true;
 
     try {
@@ -387,10 +384,9 @@ function parseTwitchMessage(line) {
             if (key === 'display-name' && val) username = val;
             if (key === 'color' && val) color = val;
 
-            // Проверяем на первое сообщение в чате
             if (key === 'first-msg' && val === '1') isFirstMsg = true;
 
-            // Проверяем на выделенное сообщение (за баллы канала)
+
             if (key === 'msg-id' && val === 'highlighted-message') isHighlighted = true;
 
             if (key === 'badges' && val) {
@@ -408,7 +404,7 @@ function parseTwitchMessage(line) {
         });
     }
 
-    // Передаем новые флаги в функцию рендера
+
     renderChatMessage(username, color, message, emotes, badges, isFirstMsg, isHighlighted);
 }
 
@@ -457,7 +453,7 @@ function renderChatMessage(username, color, message, emotes, badges, isFirstMsg,
         });
     }
 
-    // Определяем, нужно ли добавлять спец-оформление
+
     let extraClasses = '';
     let topBadgeHtml = '';
 
@@ -472,10 +468,9 @@ function renderChatMessage(username, color, message, emotes, badges, isFirstMsg,
     const msgElement = document.createElement('div');
     msgElement.className = `chat-message new-message-animation${extraClasses}`;
 
-    // Вставляем плашку сверху (если есть), а затем само сообщение с сохранением функции клика по нику
+
     msgElement.innerHTML = `${topBadgeHtml}<div>${badgesHtml}<span class="chat-username" style="color: ${color}" onclick="openUserHistory('${escapeHtml(username)}', '${color}')">${escapeHtml(username)}:</span> <span class="chat-text">${renderedMessage}</span></div>`;
 
-    // ЗАПИСЫВАЕМ СООБЩЕНИЕ В ИСТОРИЮ (убираем плашку, чтобы в истории был только текст)
     const cleanUser = username.toLowerCase();
     if (!userHistory[cleanUser]) userHistory[cleanUser] = [];
     userHistory[cleanUser].push(renderedMessage);
@@ -499,11 +494,11 @@ const slider = document.getElementById('favorites-panel');
 let isDown = false;
 let startX;
 let scrollLeft;
-let hasDragged = false; // Флаг, который блокирует случайный клик
+let hasDragged = false; 
 
 slider.addEventListener('mousedown', (e) => {
     isDown = true;
-    hasDragged = false; // Сбрасываем флаг при новом нажатии
+    hasDragged = false; 
     slider.classList.add('active');
     startX = e.pageX - slider.offsetLeft;
     scrollLeft = slider.scrollLeft;
@@ -517,7 +512,7 @@ slider.addEventListener('mouseleave', () => {
 slider.addEventListener('mouseup', () => {
     isDown = false;
     slider.classList.remove('active');
-    // Флаг hasDragged сбросится сам при следующем mousedown
+
 });
 
 slider.addEventListener('mousemove', (e) => {
@@ -526,7 +521,7 @@ slider.addEventListener('mousemove', (e) => {
     const x = e.pageX - slider.offsetLeft;
     const walk = (x - startX) * 1.5;
 
-    // Если мы сдвинули мышку больше чем на 5 пикселей - это 100% скролл
+
     if (Math.abs(walk) > 5) {
         hasDragged = true;
     }
@@ -534,9 +529,6 @@ slider.addEventListener('mousemove', (e) => {
     slider.scrollLeft = scrollLeft - walk;
 });
 
-// ==========================================
-// ЛОГИКА ОКНА ИСТОРИИ И ПЕРЕТАСКИВАНИЯ (DRAG)
-// ==========================================
 const userModal = document.getElementById('userHistoryModal');
 const modalHeader = document.getElementById('modalHeader');
 const modalBody = document.getElementById('modalBody');
@@ -545,7 +537,7 @@ const modalTitle = document.getElementById('modalTitle');
 let isDraggingModal = false;
 let dragOffsetX, dragOffsetY;
 
-// Нажатие на заголовок окна
+
 modalHeader.addEventListener('mousedown', (e) => {
     e.preventDefault()
     isDraggingModal = true;
@@ -553,11 +545,11 @@ modalHeader.addEventListener('mousedown', (e) => {
     dragOffsetY = e.clientY - userModal.getBoundingClientRect().top;
 });
 
-// Движение мышкой по всему экрану
+
 document.addEventListener('mousemove', (e) => {
     if (!isDraggingModal) return;
 
-    // Высчитываем новые координаты, не даем окну уйти за верхний левый край экрана
+
     let newX = e.clientX - dragOffsetX;
     let newY = e.clientY - dragOffsetY;
 
@@ -568,12 +560,12 @@ document.addEventListener('mousemove', (e) => {
     userModal.style.top = `${newY}px`;
 });
 
-// Отпускание кнопки мыши
+
 document.addEventListener('mouseup', () => {
     isDraggingModal = false;
 });
 
-// Открытие окна по клику на ник
+
 function openUserHistory(username, color) {
     const cleanUser = username.toLowerCase();
     const history = userHistory[cleanUser] || [];
@@ -584,16 +576,16 @@ function openUserHistory(username, color) {
     if (history.length === 0) {
         modalBody.innerHTML = '<span style="color: gray;">No recent messages found.</span>';
     } else {
-        // Рендерим историю, самые новые снизу
+
         modalBody.innerHTML = history.map(msg => `<div class="history-msg">${msg}</div>`).join('');
     }
 
-    // Сбрасываем позицию по центру при открытии нового
+
     userModal.style.top = '20%';
     userModal.style.left = '40%';
     userModal.classList.remove('hidden');
 
-    // Прокручиваем в самый низ к новым сообщениям
+
     modalBody.scrollTop = modalBody.scrollHeight;
 }
 
@@ -605,19 +597,17 @@ function closeUserHistory() {
 const chatMessagesContainer = document.getElementById('chat-messages');
 const scrollToBottomBtn = document.getElementById('scrollToBottomBtn');
 
-// Слушаем скролл внутри чата
 chatMessagesContainer.addEventListener('scroll', () => {
-    // Высчитываем, находится ли пользователь в самом низу (с запасом в 120 пикселей)
+
     const isAtBottom = Math.ceil(chatMessagesContainer.scrollTop + chatMessagesContainer.clientHeight) >= (chatMessagesContainer.scrollHeight - 120);
 
     if (isAtBottom) {
-        scrollToBottomBtn.classList.add('hidden'); // Прячем, если мы и так внизу
+        scrollToBottomBtn.classList.add('hidden'); 
     } else {
-        scrollToBottomBtn.classList.remove('hidden'); // Показываем, если улетели вверх
+        scrollToBottomBtn.classList.remove('hidden'); 
     }
 });
 
-// Функция мгновенного прыжка вниз
 function scrollToBottom() {
     chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
     scrollToBottomBtn.classList.add('hidden');
