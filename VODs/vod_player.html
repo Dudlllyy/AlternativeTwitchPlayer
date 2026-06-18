@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Кастомный VOD Плеер</title>
+    <title>VOD</title>
     <link rel="stylesheet" href="style.css">
     <style>
 
@@ -43,7 +43,7 @@
     <div class="layout" style="flex-direction: column; height: 100vh;">
 
         <div style="background: #1f1f23; padding: 12px 20px; border-bottom: 1px solid #303032; display: flex; justify-content: space-between; align-items: center;">
-            <button id="backBtn" class="main-btn" style="background: #26262c; padding: 6px 15px;">⬅ Назад к записям</button>
+            <button id="backBtn" class="main-btn" style="background: #26262c; padding: 6px 15px;">⬅ Back</button>
             <span id="vodIdDisplay" style="font-weight: bold; color: #adadb8; font-size: 14px;">VOD ID: ...</span>
         </div>
 
@@ -52,7 +52,7 @@
 
             <div class="custom-controls" style="display: flex; align-items: center; padding: 10px 15px; background: #18181b; gap: 10px; flex-wrap: wrap;">
 
-                <button class="ctrl-btn" id="playPauseBtn" onclick="togglePlay()" style="min-width: 80px;">⏸ Пауза</button>
+                <button class="ctrl-btn" id="playPauseBtn" onclick="togglePlay()" style="min-width: 80px;">⏸ Pause</button>
 
                 <span class="time-display" id="timeDisplay">00:00 / 00:00</span>
 
@@ -68,18 +68,18 @@
                 <select id="speedSelect" class="quality-select" style="padding: 5px;">
                     <option value="0.25">0.25x</option>
                     <option value="0.5">0.5x</option>
-                    <option value="1" selected>1x Нормальная</option>
+                    <option value="1" selected>1x</option>
                     <option value="1.25">1.25x</option>
                     <option value="1.5">1.5x</option>
                     <option value="2">2x</option>
                 </select>
 
                 <select id="qualitySelect" class="quality-select" style="padding: 5px; display: none;">
-                    <option value="-1">Авто</option>
+                    <option value="-1">Auto</option>
                 </select>
 
-                <button class="ctrl-btn" id="audioToggleBtn" style="border: 1px solid #303032; padding: 5px 10px; border-radius: 4px;">🎧 Только аудио</button>
-                <button class="ctrl-btn" id="fullscreenBtn" onclick="toggleFullscreen()" style="border: 1px solid #303032; padding: 5px 10px; border-radius: 4px;">🔲 Экран</button>
+                <button class="ctrl-btn" id="audioToggleBtn" style="border: 1px solid #303032; padding: 5px 10px; border-radius: 4px;">🎧 Audio</button>
+                <button class="ctrl-btn" id="fullscreenBtn" onclick="toggleFullscreen()" style="border: 1px solid #303032; padding: 5px 10px; border-radius: 4px;">🔲 Fullscreen</button>
             </div>
         </div>
     </div>
