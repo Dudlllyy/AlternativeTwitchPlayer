@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Кастомный VOD Плеер</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Специфичные стили для элементов управления записью */
+        .vod-progress-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            margin: 0 15px;
+        }
+
+        #vodProgress {
+            width: 100%;
+            cursor: pointer;
+            accent-color: #9146FF;
+            height: 6px;
+            border-radius: 3px;
+            background: #3a3a3c;
+            outline: none;
+            transition: background 0.1s;
+        }
+
+        #vodProgress:hover {
+            height: 8px;
+        }
+
+        .time-display {
+            font-size: 13px;
+            font-family: monospace;
+            color: #adadb8;
+            min-width: 110px;
+            text-align: center;
+            user-select: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="layout" style="flex-direction: column; height: 100vh;">
+
+        <div style="background: #1f1f23; padding: 12px 20px; border-bottom: 1px solid #303032; display: flex; justify-content: space-between; align-items: center;">
+            <button id="backBtn" class="main-btn" style="background: #26262c; padding: 6px 15px;">⬅ Назад к записям</button>
+            <span id="vodIdDisplay" style="font-weight: bold; color: #adadb8; font-size: 14px;">VOD ID: ...</span>
+        </div>
+
+        <div id="player-wrapper" style="margin: auto; max-width: 1280px; width: 95%; background: #000; border-radius: 8px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.7);">
+            <video id="video" preload="auto" style="width: 100%; display: block; aspect-ratio: 16/9;"></video>
+
+            <div class="custom-controls" style="display: flex; align-items: center; padding: 10px 15px; background: #18181b; gap: 10px; flex-wrap: wrap;">
+
+                <button class="ctrl-btn" id="playPauseBtn" onclick="togglePlay()" style="min-width: 80px;">⏸ Пауза</button>
+
+                <span class="time-display" id="timeDisplay">00:00 / 00:00</span>
+
+                <div class="vod-progress-container">
+                    <input type="range" id="vodProgress" min="0" value="0" step="1">
+                </div>
+
+                <div style="display: flex; align-items: center; gap: 5px;">
+                    <span style="font-size: 14px;">🔊</span>
+                    <input type="range" id="volumeSlider" min="0" max="1" step="0.05" value="0.5" style="width: 70px; accent-color: #9146FF;">
+                </div>
+
+                <select id="speedSelect" class="quality-select" style="padding: 5px;">
+                    <option value="0.25">0.25x</option>
+                    <option value="0.5">0.5x</option>
+                    <option value="1" selected>1x Нормальная</option>
+                    <option value="1.25">1.25x</option>
+                    <option value="1.5">1.5x</option>
+                    <option value="2">2x</option>
+                </select>
+
+                <select id="qualitySelect" class="quality-select" style="padding: 5px; display: none;">
+                    <option value="-1">Авто</option>
+                </select>
+
+                <button class="ctrl-btn" id="audioToggleBtn" style="border: 1px solid #303032; padding: 5px 10px; border-radius: 4px;">🎧 Только аудио</button>
+                <button class="ctrl-btn" id="fullscreenBtn" onclick="toggleFullscreen()" style="border: 1px solid #303032; padding: 5px 10px; border-radius: 4px;">🔲 Экран</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
+    <script src="vod_player.js"></script>
+</body>
+</html>
