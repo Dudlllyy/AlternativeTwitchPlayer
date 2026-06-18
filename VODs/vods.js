@@ -1,8 +1,8 @@
-// Получаем ник канала из URL (например: vods.html?channel=shroud)
+
 const urlParams = new URLSearchParams(window.location.search);
 const channelName = urlParams.get('channel');
 
-// Форматируем секунды в удобное время (ЧЧ:ММ:СС)
+
 function formatTime(totalSeconds) {
     const hours = Math.floor(totalSeconds / 3600);
     const minutes = Math.floor((totalSeconds % 3600) / 60);
@@ -17,7 +17,7 @@ function formatTime(totalSeconds) {
 
 async function loadVods() {
     if (!channelName) {
-        document.getElementById('vodGrid').innerHTML = '<div style="color: red; padding: 20px;">Ошибка: Канал не указан в URL!</div>';
+        document.getElementById('vodGrid').innerHTML = '<div style="color: red; padding: 20px;">Error: Channel not specified in URL!</div>';
         return;
     }
 
@@ -25,28 +25,27 @@ async function loadVods() {
     const grid = document.getElementById('vodGrid');
 
     try {
-        // Делаем запрос к НАШЕМУ локальному Python серверу
+
         const response = await fetch(`/api/vods?channel=${channelName}`);
 
         if (!response.ok) {
-            throw new Error("Не удалось получить данные с сервера");
+            throw new Error("Failed to retrieve data from the server");
         }
 
         const data = await response.json();
         const edges = data.data.user.videos.edges;
 
         if (edges.length === 0) {
-            grid.innerHTML = '<div style="color: gray; padding: 20px; font-size: 18px;">У этого канала нет сохраненных записей (VODs).</div>';
+            grid.innerHTML = '<div style="color: gray; padding: 20px; font-size: 18px;">This channel has no saved VODs.</div>';
             return;
         }
 
-        // Рисуем карточки
         grid.innerHTML = edges.map(edge => {
             const video = edge.node;
             const duration = formatTime(video.lengthSeconds);
             const dateStr = new Date(video.createdAt).toLocaleDateString();
 
-            // Если у видео нет превью, ставим заглушку
+
             const thumbUrl = video.previewThumbnailURL ? video.previewThumbnailURL : 'https://vod-secure.twitch.tv/assets/default_vod_thumb-320x180.jpg';
 
             return `
@@ -65,15 +64,15 @@ async function loadVods() {
 
     } catch (e) {
         console.error(e);
-        grid.innerHTML = `<div style="color: #ff4a4a; padding: 20px;">Ошибка загрузки записей. Проверьте запущен ли Python сервер.</div>`;
+        grid.innerHTML = `<div style="color: #ff4a4a; padding: 20px;">Error loading records. Check if the Python server is running.</div>`;
     }
 }
 
-// Заглушка для следующего этапа: Открытие самого плеера
+
 function openVodPlayer(videoId) {
-    // Перекидываем на страницу плеера, сохраняя ник канала в ссылке
+
     window.location.href = `vod_player.html?video=${videoId}&channel=${channelName}`;
 }
 
-// Запускаем загрузку
+
 loadVods();
