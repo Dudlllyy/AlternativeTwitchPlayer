@@ -31,7 +31,7 @@ function formatTime(seconds) {
 
 function togglePlay() {
     if (video.paused) { video.play(); playPauseBtn.innerText = "⏸ Пауза"; }
-    else { video.pause(); playPauseBtn.innerText = "▶ Старт"; }
+    else { video.pause(); playPauseBtn.innerText = "▶ Start"; }
 }
 
 speedSelect.addEventListener('change', () => video.playbackRate = parseFloat(speedSelect.value));
@@ -47,9 +47,7 @@ video.addEventListener('timeupdate', () => {
 
 progress.addEventListener('input', () => video.currentTime = progress.value);
 
-// ==========================================
-// ОСНОВНАЯ ФУНКЦИЯ ЗАГРУЗКИ (С ПОДДЕРЖКОЙ ВРЕМЕНИ)
-// ==========================================
+
 function loadPlayer(url, startTime = 0) {
     if (Hls.isSupported()) {
         if (hls) hls.destroy();
@@ -78,16 +76,14 @@ function loadPlayer(url, startTime = 0) {
     }
 }
 
-// ==========================================
-// ЛОГИКА АУДИО-РЕЖИМА
-// ==========================================
+
 audioBtn.addEventListener('click', async () => {
     const savedTime = video.currentTime;
 
     if (isAudioOnly) {
         isAudioOnly = false;
         wrapper.classList.remove('audio-mode');
-        audioBtn.innerText = "🎧 Только аудио";
+        audioBtn.innerText = "🎧 Audio";
         audioBtn.style.background = "transparent";
         qSelect.disabled = false;
         loadPlayer(`/api/vod_m3u8?video_id=${videoId}`, savedTime);
@@ -96,21 +92,18 @@ audioBtn.addEventListener('click', async () => {
             const res = await fetch(`/api/vod_m3u8?video_id=${videoId}&audio=1`);
             const text = await res.text();
 
-            // Ищем ссылку на аудио: она обычно идет в строке с TYPE=AUDIO
             const match = text.match(/TYPE=AUDIO.*URI="([^"]+)"/);
             let audioUrl = match ? match[1] : null;
 
             if (audioUrl) {
                 isAudioOnly = true;
-                // ... (далее твой код переключения классов)
 
-                // Если ссылка относительная — превращаем в абсолютную для нашего сервера
                 if (!audioUrl.startsWith('http')) {
-                // Пытаемся угадать базовый путь, если нужно
+
                     audioUrl = "https://usher.ttvnw.net" + audioUrl;
                 }
 
-            // Проксируем через локальный сервер
+
                 audioUrl = `http://localhost:${PORT}/api/vod_subfile?url=${encodeURIComponent(audioUrl)}`;
 
                 loadPlayer(audioUrl, savedTime);
