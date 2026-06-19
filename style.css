@@ -183,6 +183,7 @@ body {
 .modal-body::-webkit-scrollbar { width: 6px; }
 .modal-body::-webkit-scrollbar-thumb { background: #3a3a3d; border-radius: 3px; }
 
+
 .history-msg {
     border-bottom: 1px solid rgba(255,255,255,0.05);
     padding-bottom: 5px;
@@ -344,7 +345,7 @@ input[type=range] { width: 100px; cursor: pointer; accent-color: #9146FF; }
     flex-direction: column;
     align-items: center;
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    max-height: 200px;
+    max-height: 400px; 
     opacity: 1;
     overflow: hidden;
 }
@@ -482,6 +483,7 @@ body.theater-mode .bottom-ui-wrapper { max-height: 0; opacity: 0; margin-top: 0;
     letter-spacing: 0.5px;
 }
 
+
 .msg-highlighted {
     background: rgba(145, 70, 255, 0.15); 
     border: 1px solid #9146FF; 
@@ -510,7 +512,7 @@ body.theater-mode .bottom-ui-wrapper { max-height: 0; opacity: 0; margin-top: 0;
     transform: translateX(-50%) scale(1.05);
 }
 
-/* Класс для плавного скрытия */
+
 .scroll-bottom-btn.hidden {
     opacity: 0;
     pointer-events: none;
@@ -611,9 +613,7 @@ body.theater-mode .bottom-ui-wrapper { max-height: 0; opacity: 0; margin-top: 0;
     }
 }
 
-/* ==========================================
-   СТИЛИ ДЛЯ СТРАНИЦЫ ЗАПИСЕЙ (VODS)
-   ========================================== */
+
 .vod-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -680,3 +680,114 @@ body.theater-mode .bottom-ui-wrapper { max-height: 0; opacity: 0; margin-top: 0;
     font-size: 13px;
     color: #adadb8;
 }
+
+
+.event-widget {
+    background: rgba(24, 24, 27, 0.85);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    margin-bottom: 10px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+    transition: all 0.3s ease;
+    overflow: hidden; 
+}
+
+
+.event-summary {
+    padding: 12px 15px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    user-select: none;
+    transition: background 0.2s;
+}
+
+.event-summary:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.event-summary-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.event-header {
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.event-header.poll { color: #bf94ff; }
+.event-header.prediction { color: #adadb8; }
+
+.event-compact-stats {
+    font-size: 12px;
+    color: #adadb8;
+    font-weight: 500;
+}
+
+
+.event-toggle-btn {
+    color: #ffd700; 
+    font-size: 14px;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.event-widget.expanded .event-toggle-btn {
+    transform: rotate(180deg);
+}
+
+
+.event-details {
+    display: none; 
+    padding: 0 15px 15px 15px;
+    border-top: 1px solid rgba(255,255,255,0.05);
+    margin-top: 5px;
+    padding-top: 10px;
+}
+
+.event-widget.expanded .event-details {
+    display: block; 
+}
+
+.poll-option {
+    position: relative;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 6px;
+    margin-bottom: 6px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    border: 1px solid rgba(255, 255, 255, 0.02);
+}
+.poll-progress {
+    position: absolute; left: 0; top: 0; bottom: 0;
+    background: linear-gradient(90deg, rgba(145, 70, 255, 0.5) 0%, rgba(145, 70, 255, 0.15) 100%);
+    z-index: 1; transition: width 0.3s ease;
+}
+.poll-content { position: relative; z-index: 2; display: flex; justify-content: space-between; width: 100%; align-items: center; }
+.poll-title { color: #efeff1; font-size: 13px; font-weight: 600; }
+.poll-percent { font-weight: 700; color: #efeff1; font-size: 13px; }
+.poll-votes { color: #adadb8; font-size: 11px; margin-left: 5px; }
+
+#events-overlay {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px;
+    flex-shrink: 0; 
+    background: #18181b; 
+    border-bottom: 1px solid #303032; 
+}
+
+
+.pred-container { display: flex; gap: 8px; }
+.pred-card { flex: 1; background: rgba(0, 0, 0, 0.3); border-radius: 6px; padding: 10px; }
+.pred-card.blue { border-top: 3px solid #387aff; }
+.pred-card.pink { border-top: 3px solid #f5009b; }
+.pred-title { color: white; font-size: 13px; font-weight: 700; margin-bottom: 8px; }
+.pred-info { display: flex; flex-direction: column; gap: 2px; }
+.pred-multiplier { font-size: 11px; color: #ffd700; font-weight: bold; } 
