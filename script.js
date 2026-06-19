@@ -10,7 +10,231 @@ let isAudioOnly = false;
 let isChatVisible = true;
 let isTheater = false;
 let infoInterval;
+let pubsubSocket;
+let localPoll = {
+    isActive: false,
+    question: "",
+    options: {},     
+    votedUsers: new Set() 
+};
 
+let widgetStates = {
+    local: false,
+    poll: false,
+    prediction: false
+};
+
+
+function toggleWidgetState(type) {
+    widgetStates[type] = !widgetStates[type];
+
+    if (type === 'local') updateLocalPollUI();
+    const el = document.getElementById(`widget-${type}`);
+    if (el) el.classList.toggle('expanded');
+}
+function startLocalPoll(question, optionsArray) {
+    localPoll.isActive = true;
+    localPoll.question = question;
+    localPoll.options = {};
+    localPoll.votedUsers.clear();
+
+
+    optionsArray.forEach((optionTitle, index) => {
+        localPoll.options[index + 1] = {
+            title: optionTitle,
+            votes: 0
+        };
+    });
+
+    console.log(`Опрос запущен: ${question}`);
+    updateLocalPollUI(); 
+}
+
+
+async function fetchInitialEvents(channelLogin) {
+    try {
+
+        const query = `
+        query {
+            user(login: "${channelLogin}") {
+                channel {
+                    prediction {
+                        title
+                        status
+                        outcomes {
+                            title
+                            color
+                            totalPoints
+                        }
+                    }
+                }
+            }
+        }`;
+
+        const res = await fetch('https://gql.twitch.tv/gql', {
+            method: 'POST',
+            headers: {
+                'Client-Id': 'kimne78kx3ncx6brgo4mv6wki5h1ko', 
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ query })
+        });
+
+        const data = await res.json();
+        const prediction = data.data?.user?.channel?.prediction;
+
+
+        if (prediction && (prediction.status === 'ACTIVE' || prediction.status === 'LOCKED')) {
+
+
+            const formattedData = {
+                type: 'event-updated',
+                event: {
+                    title: prediction.title,
+                    status: prediction.status,
+                    outcomes: prediction.outcomes.map(o => ({
+                        title: o.title,
+                        color: o.color,
+                        total_points: o.totalPoints || 0
+                    }))
+                }
+            };
+
+            renderPrediction(formattedData, document.getElementById('events-overlay'));
+        }
+    } catch (e) {
+        console.log("GraphQL Initial fetch failed, waiting for socket updates...", e);
+    }
+}
+
+async function initEventsOverlay(channel) {
+    const overlay = document.getElementById('events-overlay');
+    if (!overlay) return;
+
+    overlay.innerHTML = '';
+    overlay.style.display = 'none';
+
+    try {
+        fetchInitialEvents(channel);
+
+        const idRes = await fetch(`https://decapi.me/twitch/id/${channel}`);
+        const channelId = await idRes.text();
+
+        if (channelId.includes('User not found')) return;
+
+
+        if (pubsubSocket) pubsubSocket.close();
+        pubsubSocket = new WebSocket('wss://pubsub-edge.twitch.tv');
+
+        pubsubSocket.onopen = () => {
+
+            setInterval(() => pubsubSocket.send(JSON.stringify({ type: 'PING' })), 1000 * 60 * 4);
+
+
+            const listenMessage = {
+                type: 'LISTEN',
+                nonce: Math.random().toString(36).substring(2),
+                data: {
+                    topics: [
+                        `predictions-channel-v1.${channelId}`,
+                        `polls-v1.${channelId}`
+                    ],
+                    auth_token: "" 
+                }
+            };
+            pubsubSocket.send(JSON.stringify(listenMessage));
+        };
+
+        pubsubSocket.onmessage = (event) => {
+            const response = JSON.parse(event.data);
+            if (response.type !== 'MESSAGE') return;
+
+            const topic = response.data.topic;
+            const messageData = JSON.parse(response.data.message);
+
+            if (topic.startsWith('predictions')) {
+                renderPrediction(messageData, overlay);
+            } else if (topic.startsWith('polls')) {
+                renderPoll(messageData, overlay);
+            }
+        };
+    } catch (e) {
+        console.log('Ошибка загрузки оверлея событий:', e);
+    }
+}
+
+
+function renderPrediction(data, container) {
+    const eventType = data.type; 
+    const prediction = data.event;
+
+
+    if (eventType === 'event-status-update' && (prediction.status === 'RESOLVED' || prediction.status === 'CANCELED')) {
+        container.style.display = 'none';
+        return;
+    }
+
+    container.style.display = 'block';
+
+    let html = `<div style="font-size: 13px; font-weight: bold; color: #adadb8;">🔮 СТАВКА: ${prediction.title}</div>`;
+
+    let totalPoints = prediction.outcomes.reduce((sum, o) => sum + o.total_points, 0);
+    totalPoints = totalPoints === 0 ? 1 : totalPoints; 
+
+    html += `<div style="display: flex; gap: 8px; margin-top: 5px;">`;
+    prediction.outcomes.forEach(outcome => {
+        const percent = Math.round((outcome.total_points / totalPoints) * 100);
+
+        const color = outcome.color === 'BLUE' ? '#387aff' : '#f5009b';
+
+        html += `
+            <div style="flex: 1; background: #26262c; padding: 6px 8px; border-radius: 4px; border-top: 3px solid ${color};">
+                <div style="font-size: 13px; color: white;">${outcome.title}</div>
+                <div style="display: flex; justify-content: space-between; font-size: 12px; margin-top: 4px;">
+                    <span style="color: #adadb8;">${percent}%</span>
+                    <span style="color: ${color}; font-weight: bold;">${outcome.total_points.toLocaleString()} баллов</span>
+                </div>
+            </div>
+        `;
+    });
+    html += `</div>`;
+
+    container.innerHTML = html;
+}
+
+
+function renderPoll(data, container) {
+    const eventType = data.type;
+    const poll = data.poll;
+
+
+    if (eventType === 'POLL_COMPLETE' || eventType === 'POLL_ARCHIVE') {
+        container.style.display = 'none';
+        return;
+    }
+
+    container.style.display = 'flex';
+    let html = `<div style="font-size: 13px; font-weight: bold; color: #adadb8; margin-bottom: 5px;">📊 ОПРОС: ${poll.title}</div>`;
+
+    let totalVotes = poll.choices.reduce((sum, c) => sum + c.votes.total, 0);
+    totalVotes = totalVotes === 0 ? 1 : totalVotes;
+
+    poll.choices.forEach(choice => {
+        const percent = Math.round((choice.votes.total / totalVotes) * 100);
+        html += `
+            <div style="position: relative; background: #26262c; border-radius: 4px; overflow: hidden; padding: 6px 10px;">
+                <div style="position: absolute; left: 0; top: 0; bottom: 0; width: ${percent}%; background: rgba(145, 70, 255, 0.25); z-index: 1; transition: width 0.5s;"></div>
+                
+                <div style="position: relative; z-index: 2; display: flex; justify-content: space-between; font-size: 13px;">
+                    <span style="color: white;">${choice.title}</span>
+                    <span style="color: #adadb8; font-weight: bold;">${percent}% <span style="font-weight: normal; font-size: 11px;">(${choice.votes.total.toLocaleString()})</span></span>
+                </div>
+            </div>
+        `;
+    });
+
+    container.innerHTML = html;
+}
 
 function toggleFullscreen() {
     if (!document.fullscreenElement) {
@@ -134,9 +358,8 @@ function renderFavorites() {
 async function checkFavoriteStatus(channel) {
     try {
 
-        const res = await fetch(`https://decapi.me/twitch/viewercount/${channel}`);
+        const res = await fetch(`/api/live_status?channel=${channel}`);
         const text = await res.text();
-
 
         const dot = document.getElementById(`fav-dot-${channel}`);
         const viewers = document.getElementById(`fav-viewers-${channel}`);
@@ -146,11 +369,11 @@ async function checkFavoriteStatus(channel) {
         if (text.toLowerCase().includes('offline')) {
             dot.classList.add('offline');
             dot.classList.remove('live');
-            viewers.innerText = ''; 
+            viewers.innerText = '';
         } else {
             dot.classList.add('live');
             dot.classList.remove('offline');
-            viewers.innerText = `👁 ${text}`; 
+            viewers.innerText = `👁 ${text.trim()}`;
         }
     } catch (e) {
         console.log(`Failed to check status for ${channel}`);
@@ -176,11 +399,13 @@ function startPlayer(url) {
             qSelect.value = "-1";
         });
 
+
         hls.on(Hls.Events.ERROR, (event, data) => {
             if (data.fatal) {
                 if (data.response && data.response.code === 404) {
-                    document.getElementById('streamTitleText').innerText = "❌ Стрим сейчас ОФФЛАЙН";
-                    alert("Этот канал сейчас оффлайн! Twitch отключил трансляцию.");
+                    const channel = document.getElementById('channelName').value.trim();
+                    document.getElementById('streamTitleText').innerText = "❌ Стрим оффлайн";
+                    showOfflineModal(channel); 
                 }
                 hls.destroy();
             }
@@ -206,9 +431,27 @@ async function loadStream() {
     document.getElementById('streamTitleText').innerText = "Loading info...";
     document.getElementById('streamViewersCount').innerText = "👁 0";
 
-    startPlayer(`/api/m3u8?channel=${channel}`);
 
+    try {
+        const decapiRes = await fetch(`/api/live_status?channel=${channel}`);
+        const text = await decapiRes.text();
+
+        if (text.toLowerCase().includes('offline')) {
+            document.getElementById('streamTitleText').innerText = "❌ Channel Offline";
+            document.getElementById('streamViewersCount').innerText = "";
+            if (hls) hls.destroy();
+            showOfflineModal(channel);
+            return; 
+        }
+    } catch (e) {
+        console.log("Live status check skipped, playing stream directly...");
+    }
+
+
+    startPlayer(`/api/m3u8?channel=${channel}`);
     initChat(channel);
+    initEventsOverlay(channel);
+
     fetchStreamInfo(channel);
     if (infoInterval) clearInterval(infoInterval);
     infoInterval = setInterval(() => fetchStreamInfo(channel), 60000);
@@ -231,8 +474,9 @@ async function toggleAudio() {
     try {
         const res = await fetch(`/api/m3u8?channel=${channel}`);
 
+
         if (res.status === 404) {
-            alert("Канал сейчас ОФФЛАЙН.");
+            showOfflineModal(channel); 
             isAudioOnly = false;
             return;
         }
@@ -264,7 +508,7 @@ async function toggleAudio() {
             audioBtn.classList.add('audio-btn-active');
             qSelect.disabled = true;
         } else {
-            alert("Twitch did not provide an audio stream.");
+            showOfflineModal(channel); 
             isAudioOnly = false;
         }
     } catch (e) {
@@ -351,7 +595,7 @@ function initChat(channelName) {
         chatContainer.innerHTML += `<div style="color: #00ff00; text-align: center; margin-bottom: 10px;">✅ Chat connected</div>`;
     };
 
-    ws.onmessage = (event) => {
+ws.onmessage = (event) => {
         const lines = event.data.split('\r\n');
         lines.forEach(line => {
             if (!line) return;
@@ -363,6 +607,197 @@ function initChat(channelName) {
             else if (line.includes(' PRIVMSG ')) parseTwitchMessage(line);
         });
     };
+
+}
+
+
+function updateLocalPollUI() {
+    const container = document.getElementById('events-overlay');
+    if (!container || !localPoll.isActive) return;
+
+    container.style.display = 'block';
+
+    let totalVotes = Object.values(localPoll.options).reduce((sum, opt) => sum + opt.votes, 0);
+    let total = totalVotes === 0 ? 1 : totalVotes;
+
+
+    let compactStatsText = Object.keys(localPoll.options).map(key => {
+        let percent = Math.round((localPoll.options[key].votes / total) * 100);
+        return `<span style="margin-right: 8px;">[${key}] ${percent}%</span>`;
+    }).join(' • ');
+
+
+    const expandedClass = widgetStates.local ? 'expanded' : '';
+
+    let html = `
+        <div class="event-widget ${expandedClass}" id="widget-local">
+            <!-- КРАСНАЯ ЗОНА (Кликабельная) -->
+            <div class="event-summary" onclick="toggleWidgetState('local')">
+                <div class="event-summary-info">
+                    <div class="event-header poll">📊 Локальный: ${escapeHtml(localPoll.question)}</div>
+                    <div class="event-compact-stats">${compactStatsText}</div>
+                </div>
+                <div class="event-toggle-btn">▼</div>
+            </div>
+
+            <!-- ЖЕЛТАЯ ЗОНА (Детали) -->
+            <div class="event-details">
+    `;
+
+    Object.keys(localPoll.options).forEach(key => {
+        const option = localPoll.options[key];
+        const percent = Math.round((option.votes / total) * 100);
+
+        html += `
+                <div class="poll-option">
+                    <div class="poll-progress" style="width: ${percent}%;"></div>
+                    <div class="poll-content">
+                        <span class="poll-title"><span style="color:#bf94ff; margin-right:4px;">[${key}]</span> ${escapeHtml(option.title)}</span>
+                        <div class="poll-stats">
+                            <span class="poll-percent">${percent}%</span>
+                            <span class="poll-votes">(${option.votes})</span>
+                        </div>
+                    </div>
+                </div>
+        `;
+    });
+
+    html += `
+                <div style="font-size: 11px; color: #adadb8; text-align: right; margin-top: 6px;">Всего голосов: ${totalVotes}</div>
+            </div>
+        </div>
+    `;
+    container.innerHTML = html;
+}
+
+
+function renderPrediction(data, container) {
+    const eventType = data.type;
+    const prediction = data.event;
+
+    if (eventType === 'event-status-update' && (prediction.status === 'RESOLVED' || prediction.status === 'CANCELED')) {
+        container.style.display = 'none';
+        return;
+    }
+
+    container.style.display = 'block';
+
+    let totalPoints = prediction.outcomes.reduce((sum, o) => sum + o.total_points, 0);
+    totalPoints = totalPoints === 0 ? 1 : totalPoints;
+
+    let compactStatsText = prediction.outcomes.map(o => {
+        const percent = Math.round((o.total_points / totalPoints) * 100);
+        const icon = o.color === 'BLUE' ? '🟦' : '🟪';
+        return `${icon} ${percent}%`;
+    }).join(' • ');
+
+    const expandedClass = widgetStates.prediction ? 'expanded' : '';
+
+    let html = `
+        <div class="event-widget ${expandedClass}" id="widget-prediction">
+            <div class="event-summary" onclick="toggleWidgetState('prediction')">
+                <div class="event-summary-info">
+                    <div class="event-header prediction">🔮 Ставка: ${escapeHtml(prediction.title)}</div>
+                    <div class="event-compact-stats">${compactStatsText}</div>
+                </div>
+                <div class="event-toggle-btn">▼</div>
+            </div>
+
+            <div class="event-details">
+                <div class="pred-container">
+    `;
+
+    prediction.outcomes.forEach(outcome => {
+        const percent = Math.round((outcome.total_points / totalPoints) * 100);
+        const isBlue = outcome.color === 'BLUE';
+        const cardClass = isBlue ? 'blue' : 'pink';
+        const colorHex = isBlue ? '#387aff' : '#f5009b';
+
+
+        const multiplier = outcome.total_points > 0 ? (totalPoints / outcome.total_points).toFixed(2) : "1.00";
+
+        html += `
+                    <div class="pred-card ${cardClass}">
+                        <div class="pred-title">${escapeHtml(outcome.title)}</div>
+                        <div class="pred-info">
+                            <span style="color: #adadb8; font-size: 12px;">${percent}% голосов</span>
+                            <span style="color: ${colorHex}; font-weight: bold;">${outcome.total_points.toLocaleString()} pts</span>
+                            <span class="pred-multiplier">Коэфф. 1:${multiplier}</span>
+                        </div>
+                    </div>
+        `;
+    });
+
+    html += `
+                </div>
+                <div style="font-size: 11px; color: #adadb8; text-align: right; margin-top: 8px;">Общий банк: ${totalPoints.toLocaleString()}</div>
+            </div>
+        </div>`;
+    container.innerHTML = html;
+}
+
+
+function renderPoll(data, container) {
+    const eventType = data.type;
+    const poll = data.poll;
+
+    if (eventType === 'POLL_COMPLETE' || eventType === 'POLL_ARCHIVE') {
+        container.style.display = 'none';
+        return;
+    }
+
+    container.style.display = 'block';
+
+    let totalVotes = poll.choices.reduce((sum, c) => sum + c.votes.total, 0);
+    totalVotes = totalVotes === 0 ? 1 : totalVotes;
+
+    let compactStatsText = poll.choices.slice(0, 2).map(c => {
+        return `${Math.round((c.votes.total / totalVotes) * 100)}%`;
+    }).join(' • ') + (poll.choices.length > 2 ? ' ...' : '');
+
+    const expandedClass = widgetStates.poll ? 'expanded' : '';
+
+    let html = `
+        <div class="event-widget ${expandedClass}" id="widget-poll">
+            <div class="event-summary" onclick="toggleWidgetState('poll')">
+                <div class="event-summary-info">
+                    <div class="event-header poll">📊 Опрос: ${escapeHtml(poll.title)}</div>
+                    <div class="event-compact-stats">Лидеры: ${compactStatsText}</div>
+                </div>
+                <div class="event-toggle-btn">▼</div>
+            </div>
+
+            <div class="event-details">
+    `;
+
+    poll.choices.forEach(choice => {
+        const percent = Math.round((choice.votes.total / totalVotes) * 100);
+        html += `
+                <div class="poll-option">
+                    <div class="poll-progress" style="width: ${percent}%;"></div>
+                    <div class="poll-content">
+                        <span class="poll-title">${escapeHtml(choice.title)}</span>
+                        <div class="poll-stats">
+                            <span class="poll-percent">${percent}%</span>
+                            <span class="poll-votes">(${choice.votes.total.toLocaleString()})</span>
+                        </div>
+                    </div>
+                </div>
+        `;
+    });
+
+    html += `
+                <div style="font-size: 11px; color: #adadb8; text-align: right; margin-top: 6px;">Всего: ${totalVotes}</div>
+            </div>
+        </div>
+    `;
+    container.innerHTML = html;
+}
+
+
+function stopLocalPoll() {
+    localPoll.isActive = false;
+    document.getElementById('events-overlay').style.display = 'none';
 }
 
 function parseTwitchMessage(line) {
@@ -383,10 +818,7 @@ function parseTwitchMessage(line) {
             const [key, val] = t.split('=');
             if (key === 'display-name' && val) username = val;
             if (key === 'color' && val) color = val;
-
             if (key === 'first-msg' && val === '1') isFirstMsg = true;
-
-
             if (key === 'msg-id' && val === 'highlighted-message') isHighlighted = true;
 
             if (key === 'badges' && val) {
@@ -404,6 +836,16 @@ function parseTwitchMessage(line) {
         });
     }
 
+
+    if (localPoll.isActive) {
+        const vote = message.trim(); 
+
+        if (localPoll.options[vote] && !localPoll.votedUsers.has(username)) {
+            localPoll.options[vote].votes += 1;
+            localPoll.votedUsers.add(username);
+            updateLocalPollUI();
+        }
+    }
 
     renderChatMessage(username, color, message, emotes, badges, isFirstMsg, isHighlighted);
 }
@@ -453,7 +895,6 @@ function renderChatMessage(username, color, message, emotes, badges, isFirstMsg,
         });
     }
 
-
     let extraClasses = '';
     let topBadgeHtml = '';
 
@@ -470,6 +911,7 @@ function renderChatMessage(username, color, message, emotes, badges, isFirstMsg,
 
 
     msgElement.innerHTML = `${topBadgeHtml}<div>${badgesHtml}<span class="chat-username" style="color: ${color}" onclick="openUserHistory('${escapeHtml(username)}', '${color}')">${escapeHtml(username)}:</span> <span class="chat-text">${renderedMessage}</span></div>`;
+
 
     const cleanUser = username.toLowerCase();
     if (!userHistory[cleanUser]) userHistory[cleanUser] = [];
@@ -494,7 +936,7 @@ const slider = document.getElementById('favorites-panel');
 let isDown = false;
 let startX;
 let scrollLeft;
-let hasDragged = false; 
+let hasDragged = false;
 
 slider.addEventListener('mousedown', (e) => {
     isDown = true;
@@ -521,13 +963,13 @@ slider.addEventListener('mousemove', (e) => {
     const x = e.pageX - slider.offsetLeft;
     const walk = (x - startX) * 1.5;
 
-
     if (Math.abs(walk) > 5) {
         hasDragged = true;
     }
 
     slider.scrollLeft = scrollLeft - walk;
 });
+
 
 const userModal = document.getElementById('userHistoryModal');
 const modalHeader = document.getElementById('modalHeader');
@@ -585,7 +1027,6 @@ function openUserHistory(username, color) {
     userModal.style.left = '40%';
     userModal.classList.remove('hidden');
 
-
     modalBody.scrollTop = modalBody.scrollHeight;
 }
 
@@ -593,9 +1034,31 @@ function closeUserHistory() {
     userModal.classList.add('hidden');
 }
 
+const offlineModal = document.getElementById('offlineModal');
+const offlineChannelName = document.getElementById('offlineChannelName');
+let currentOfflineChannel = "";
+
+function showOfflineModal(channel) {
+    currentOfflineChannel = channel;
+    offlineChannelName.innerText = channel;
+    offlineModal.classList.remove('hidden');
+}
+
+function closeOfflineModal() {
+    offlineModal.classList.add('hidden');
+}
+
+function goToVods() {
+
+    window.location.href = `vods.html?channel=${currentOfflineChannel}`;
+}
+
+
+
 
 const chatMessagesContainer = document.getElementById('chat-messages');
 const scrollToBottomBtn = document.getElementById('scrollToBottomBtn');
+
 
 chatMessagesContainer.addEventListener('scroll', () => {
 
@@ -612,6 +1075,31 @@ function scrollToBottom() {
     chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
     scrollToBottomBtn.classList.add('hidden');
 }
+
+function fireUIPoll() {
+    const question = document.getElementById('pollQuestion').value;
+
+    const options = document.getElementById('pollOptions').value.split(',').map(s => s.trim());
+
+    if (question && options.length > 1) {
+        startLocalPoll(question, options);
+    } else {
+        alert("Заполни вопрос и минимум два варианта!");
+    }
+}
+
+// ==========================================
+// ЛОГИКА КНОПКИ РАЗРАБОТЧИКА
+// ==========================================
+function toggleDevPanel() {
+    const panel = document.getElementById('dev-poll-panel');
+    if (panel.style.display === 'none') {
+        panel.style.display = 'block';
+    } else {
+        panel.style.display = 'none';
+    }
+}
+
 renderFavorites();
 fetchGlobal7TV();
 loadStream();
