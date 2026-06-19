@@ -3,6 +3,104 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alternative Twitch Player + 7TV</title>
+    <link rel="stylesheet" href="style.css?v=2">
+
+</head>
+<body>
+    <div class="layout">
+        <button id="floatingShowBtn" class="floating-show-btn" onclick="toggleChat()">▼ Show Chat</button>
+
+        <div class="video-column">
+            <div id="player-wrapper">
+                <div class="stream-info-overlay">
+                    <div class="stream-title" id="streamTitleText">Loading info...</div>
+                    <div class="stream-viewers" id="streamViewersCount">👁 0</div>
+                </div>
+
+                <video id="video" autoplay></video>
+
+                <div class="custom-controls">
+                    <button class="ctrl-btn" id="playPauseBtn" onclick="togglePlay()">⏸ Pause</button>
+                    <input type="range" id="volumeSlider" min="0" max="1" step="0.05" value="0.5" oninput="changeVolume()">
+                    <select id="qualitySelect" onchange="changeQuality()" class="quality-select" style="display: none;">
+                        <option value="-1">Auto</option>
+                    </select>
+
+                    <div style="flex-grow: 1;"></div>
+
+                    <div class="live-dot" title="Live"></div>
+                    <span style="color: white; font-weight: bold;">LIVE</span>
+                    <button class="ctrl-btn" id="syncLiveBtn" onclick="syncToLive()" title="Click to sync to live edge">Latency: -</button>
+
+                    <button class="ctrl-btn" id="theaterBtn" onclick="toggleTheater()" style="border: 1px solid white; padding: 5px 10px; border-radius: 4px;">🎬 Theater</button>
+                    <button class="ctrl-btn" id="audioToggleBtn" onclick="toggleAudio()" style="border: 1px solid white; padding: 5px 10px; border-radius: 4px;">🎧 Audio Only</button>
+                    <button class="ctrl-btn" onclick="toggleFullscreen()" style="border: 1px solid white; padding: 5px 10px; border-radius: 4px;">🔲 Fullscreen</button>
+                </div>
+            </div>
+
+<div class="bottom-ui-wrapper">
+                <div id="ui">
+                    <input type="text" id="channelName" class="main-input" value="" placeholder="Channel name">
+                    <button class="main-btn" onclick="loadStream()">▶ Play Stream</button>
+                    <button class="main-btn" style="background: #26262c;" onclick="saveFavorite()">⭐ Bookmark</button>
+                </div>
+                <div id="favorites-panel"></div>
+
+                <div id="dev-poll-panel" style="display: none; position: fixed; bottom: 55px; left: 15px; background: #1f1f23; padding: 15px; border-radius: 6px; width: 320px; box-sizing: border-box; z-index: 10000; box-shadow: 0 10px 30px rgba(0,0,0,0.9); border: 1px solid #303032;">
+                    <h4 style="margin: 0 0 10px 0; color: #adadb8;">Управление опросом</h4>
+                    <input type="text" id="pollQuestion" placeholder="Вопрос..." style="width: 100%; margin-bottom: 8px; padding: 5px; box-sizing: border-box;">
+                    <input type="text" id="pollOptions" placeholder="Варианты (через запятую)..." style="width: 100%; margin-bottom: 8px; padding: 5px; box-sizing: border-box;">
+                    <div style="display: flex; gap: 10px;">
+                        <button class="main-btn" onclick="fireUIPoll()" style="flex: 1;">Запустить</button>
+                        <button class="main-btn" style="background: #eb0400; flex: 1;" onclick="stopLocalPoll()">Завершить</button>
+                    </div>
+                </div>
+                </div>
+        </div> <div class="chat-column" id="chatBox">
+            <div class="chat-header">Twitch Chat + 7TV</div>
+            <button class="chat-toggle-btn" onclick="toggleChat()">▲ Hide Chat</button>
+            <div id="events-overlay" style="display: none;"></div>
+            <div id="chat-messages"></div>
+
+            <button id="scrollToBottomBtn" class="scroll-bottom-btn hidden" onclick="scrollToBottom()">⬇ Новые сообщения</button>
+        </div>
+    </div>
+    <div id="userHistoryModal" class="user-modal hidden">
+        <div class="modal-header" id="modalHeader">
+            <span id="modalTitle" style="font-weight: bold;">User History</span>
+            <span class="modal-close" onclick="closeUserHistory()" title="Close">✖</span>
+        </div>
+        <div class="modal-body" id="modalBody">
+            </div>
+    </div>
+    <div id="offlineModal" class="user-modal hidden" style="top: 50%; left: 50%; transform: translate(-50%, -50%); width: 380px; text-align: center; z-index: 3000;">
+        <div class="modal-header" style="justify-content: center; position: relative; cursor: default;">
+            <span style="font-weight: bold; color: #ff4a4a; font-size: 16px;">🔴 Channel Offline</span>
+            <span class="modal-close" style="position: absolute; right: 15px;" onclick="closeOfflineModal()" title="Close">✖</span>
+        </div>
+        <div class="modal-body" style="padding: 25px; align-items: center;">
+            <p style="font-size: 16px; margin: 0 0 15px 0;">Стример <b id="offlineChannelName" style="color: #9146FF;"></b> сейчас не в сети.</p>
+            <p style="color: #adadb8; font-size: 13px; margin: 0 0 25px 0;">Хотите посмотреть его прошлые трансляции (VODs)?</p>
+
+            <div style="display: flex; gap: 10px; width: 100%;">
+                <button class="main-btn" style="flex: 1; padding: 12px;" onclick="goToVods()">🎬 Смотреть записи</button>
+                <button class="main-btn" style="flex: 1; padding: 12px; background: #26262c;" onclick="closeOfflineModal()">Отмена</button>
+            </div>
+        </div>
+    </div>
+    <button onclick="toggleDevPanel()" style="position: fixed; bottom: 15px; left: 15px; background: rgba(31, 31, 35, 0.8); border: 1px solid #303032; color: #adadb8; padding: 6px 10px; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer; z-index: 9999; backdrop-filter: blur(4px); transition: all 0.2s;" onmouseover="this.style.color='white'; this.style.borderColor='#9146FF'" onmouseout="this.style.color='#adadb8'; this.style.borderColor='#303032'">
+        ⚙️ Dev
+    </button>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
+
+    <script src="script.js?v=3"></script>
+</body>
+</html><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Alternative Twitch Player</title>
     <link rel="stylesheet" href="style.css?v=2">
 
