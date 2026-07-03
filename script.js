@@ -1103,3 +1103,37 @@ function toggleDevPanel() {
 renderFavorites();
 fetchGlobal7TV();
 loadStream();
+
+// ==========================================
+// ПЛАВНОЕ ПЕРЕТАСКИВАНИЕ И АВТО-СКРОЛЛ ИЗБРАННОГО
+// ==========================================
+const favPanel = document.getElementById('favorites-panel');
+
+if (favPanel) {
+    new Sortable(favPanel, {
+        animation: 250,
+        draggable: '.fav-btn',
+        filter: '.delete-fav',
+
+
+        forceFallback: true,
+        fallbackOnBody: true,
+        fallbackClass: 'fav-dragging',
+        ghostClass: 'fav-ghost',
+
+
+        scroll: favPanel,
+        scrollSensitivity: 85,
+        scrollSpeed: 25,
+        bubbleScroll: true,
+
+        onEnd: function () {
+            const newOrder = [];
+            document.querySelectorAll('#favorites-panel .fav-btn').forEach(btn => {
+                const channel = btn.id.replace('fav-btn-', '');
+                newOrder.push(channel);
+            });
+            localStorage.setItem('twitch_favs', JSON.stringify(newOrder));
+        }
+    });
+}
