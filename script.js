@@ -269,7 +269,7 @@ async function fetchStreamInfo(channel) {
 function toggleChat() {
     const chatBox = document.getElementById('chatBox');
     const showBtn = document.getElementById('floatingShowBtn');
-    const chatMessages = document.getElementById('chat-messages');
+
 
     isChatVisible = !isChatVisible;
     if (isChatVisible) {
@@ -278,7 +278,7 @@ function toggleChat() {
     } else {
         chatBox.classList.add('chat-hidden');
         showBtn.classList.add('visible');
-        chatMessages.innerHTML = '';
+
     }
 }
 
@@ -801,7 +801,7 @@ function stopLocalPoll() {
 }
 
 function parseTwitchMessage(line) {
-    if (!isChatVisible) return;
+
 
     const parts = line.split(' PRIVMSG ');
     if (parts.length < 2) return;
