@@ -231,8 +231,21 @@ class TwitchHandler(http.server.SimpleHTTPRequestHandler):
 def open_browser():
     webbrowser.open(f'http://localhost:{PORT}')
 
+def is_server_running(port):
+    """Проверяет, занят ли порт (работает ли уже наш сервер в фоне)"""
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        return s.connect_ex(('localhost', port)) == 0
 
-with http.server.ThreadingHTTPServer(("", PORT), TwitchHandler) as httpd:
-    print(f"Server is running! PORT: {PORT}")
-    threading.Timer(1.0, open_browser).start()
-    httpd.serve_forever()
+if __name__ == '__main__':
+
+    if is_server_running(PORT):
+        print("Сервер уже работает в фоне. Просто открываем вкладку...")
+        open_browser()
+        sys.exit(0)
+        
+    os.chdir(get_base_path())
+    with http.server.ThreadingHTTPServer(("", PORT), TwitchHandler) as httpd:
+        httpd.daemon_threads = True 
+        print(f"Server is running! PORT: {PORT}")
+        threading.Timer(1.0, open_browser).start()
+        httpd.serve_forever()
