@@ -148,7 +148,11 @@ async function checkFavoriteStatus(channel) {
 function startPlayer(url) {
     if (Hls.isSupported()) {
         if (hls) hls.destroy();
-        hls = new Hls();
+        hls = new Hls({
+            lowLatencyMode: true,
+            liveSyncDurationCount: 2,
+            liveMaxLatencyDurationCount: 4,
+            maxLiveSyncPlaybackRate: 1.5});
         hls.loadSource(url);
         hls.attachMedia(video);
 
