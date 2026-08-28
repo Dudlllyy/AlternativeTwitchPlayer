@@ -39,7 +39,7 @@ class TwitchHandler(http.server.SimpleHTTPRequestHandler):
 
                 gql_query = f""
                             query {{ 
-                                streamPlaybackAccessToken(channelName: "{channel}", params: {{platform: "web", playerBackend: "mediaplayer", playerType: "site"}}) {{ 
+                                streamPlaybackAccessToken(channelName: "{channel}", params: {{platform: "web", playerBackend: "mediaplayer", playerType: "embed"}}) {{ 
                                     value 
                                     signature 
                                 }} 
