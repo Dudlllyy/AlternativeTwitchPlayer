@@ -36,21 +36,36 @@ class TwitchHandler(http.server.SimpleHTTPRequestHandler):
                 return
             try:
                 client_id = 'kimne78kx3ncx6brgo4mv6wki5h1ko'
-                gql_data = json.dumps({
-                    "operationName": "PlaybackAccessToken",
-                    "extensions": {"persistedQuery": {"version": 1,
-                                                      "sha256Hash": "0828119ded1c13477966434e15800ff57ddacf13ba1911c129dc2200705b0712"}},
-                    "variables": {"isLive": True, "login": channel, "isVod": False, "vodID": "", "playerType": "embed"}
-                }).encode('utf-8')
+
+                gql_query = f""
+                            query {{ 
+                                streamPlaybackAccessToken(channelName: "{channel}", params: {{platform: "web", playerBackend: "mediaplayer", playerType: "site"}}) {{ 
+                                    value 
+                                    signature 
+                                }} 
+                            }}
+                            ""
+                gql_data = json.dumps({"query": gql_query}).encode('utf-8')
+
                 headers = {'Client-Id': client_id, 'User-Agent': 'Mozilla/5.0'}
                 req = urllib.request.Request('https://gql.twitch.tv/gql', data=gql_data, headers=headers)
                 with urllib.request.urlopen(req) as response:
                     res = json.loads(response.read().decode('utf-8'))
+
+                    if 'data' not in res or not res['data'].get('streamPlaybackAccessToken'):
+                        print(f"\n[ОШИБКА API ТВИЧА - LIVE] Нестандартный ответ: {res}\n")
+                        try:
+                            self.send_error(500, "Twitch API Error")
+                        except:
+                            pass
+                        return
+
                     token = res['data']['streamPlaybackAccessToken']['value']
                     sig = res['data']['streamPlaybackAccessToken']['signature']
 
                 token_encoded = urllib.parse.quote(token)
                 usher_url = f"https://usher.ttvnw.net/api/channel/hls/{channel}.m3u8?client_id={client_id}&token={token_encoded}&sig={sig}&allow_source=true&allow_audio_only=true"
+
                 req_m3u8 = urllib.request.Request(usher_url, headers=headers)
                 with urllib.request.urlopen(req_m3u8) as response_m3u8:
                     self.send_response(200)
