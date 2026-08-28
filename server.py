@@ -9,7 +9,7 @@ import webbrowser
 import threading
 import re
 import shutil
-
+import uuid
 PORT = 8000
 
 if getattr(sys, 'frozen', False):
@@ -36,7 +36,7 @@ class TwitchHandler(http.server.SimpleHTTPRequestHandler):
                 return
             try:
                 client_id = 'kimne78kx3ncx6brgo4mv6wki5h1ko'
-
+                device_id = uuid.uuid4().hex
                 gql_query = f""
                             query {{ 
                                 streamPlaybackAccessToken(channelName: "{channel}", params: {{platform: "web", playerBackend: "mediaplayer", playerType: "embed"}}) {{ 
@@ -45,9 +45,15 @@ class TwitchHandler(http.server.SimpleHTTPRequestHandler):
                                 }} 
                             }}
                             ""
+
                 gql_data = json.dumps({"query": gql_query}).encode('utf-8')
 
-                headers = {'Client-Id': client_id, 'User-Agent': 'Mozilla/5.0'}
+                headers = {
+                    'Client-Id': client_id,
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                    'Device-Id': device_id,
+                    'Client-Session-Id': device_id
+                }
                 req = urllib.request.Request('https://gql.twitch.tv/gql', data=gql_data, headers=headers)
                 with urllib.request.urlopen(req) as response:
                     res = json.loads(response.read().decode('utf-8'))
@@ -65,17 +71,20 @@ class TwitchHandler(http.server.SimpleHTTPRequestHandler):
 
                 token_encoded = urllib.parse.quote(token)
                 usher_url = f"https://usher.ttvnw.net/api/channel/hls/{channel}.m3u8?client_id={client_id}&token={token_encoded}&sig={sig}&allow_source=true&allow_audio_only=true"
-
                 req_m3u8 = urllib.request.Request(usher_url, headers=headers)
+
                 with urllib.request.urlopen(req_m3u8) as response_m3u8:
                     self.send_response(200)
                     self.send_header('Content-Type', 'application/vnd.apple.mpegurl')
                     self.send_header('Access-Control-Allow-Origin', '*')
                     self.end_headers()
                     self.wfile.write(response_m3u8.read())
-            except Exception:
-                self.send_error(500)
-
+            except Exception as e:
+                print(f"Exception in m3u8: {e}")
+                try:
+                    self.send_error(500)
+                except:
+                    pass
         # ==========================================
         # 2. ЛЕГКИЙ СТАТУС ОНЛАЙНА
         # ==========================================
